@@ -1,6 +1,6 @@
 # StureAssistant
 
-This is project to my Hobby Caravan.
+This is project to my Hobby Caravan, called Sture II.
 Using HomeAssistant and a Esp32 for some extra functions and developing it to read and control internal CI-bus.
 
 Initial hardware:
