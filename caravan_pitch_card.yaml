@@ -1,0 +1,21 @@
+type: vertical-stack
+cards:
+  - type: picture-elements
+    image: /local/caravan_side_pitch.png
+    elements:
+      - type: state-label
+        entity: sensor.esp32_sture2_lutning_fram_bak
+        style:
+          top: -100%
+          left: -100%
+    card_mod:
+      style: |
+        ha-card {
+          --trigger: "{{ states('sensor.esp32_sture2_lutning_fram_bak') }}";
+          transform: rotate({{ states('sensor.esp32_sture2_lutning_fram_bak') | float(0) }}deg);
+          transition: transform 0.05s linear;
+        }
+grid_options:
+  columns: 6
+  rows: auto
+  
