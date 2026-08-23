@@ -1,0 +1,100 @@
+# Mainconfig ESP32-S3-DevKitC-1-N16R8V (16 MB Flash Quad, 8 MB PSRAM Octal)
+# Connects to WIFI, communication with MPU-6050, calculate angles Pitch and Roll  
+# Created 2026-08-22 by David Fareby
+# Last changed 
+#
+
+esphome:
+  name: esp32
+  friendly_name: "Esp32"
+
+esp32:
+  variant: esp32s3
+
+logger:
+
+api:
+  encryption:
+    key: "HWvXJuMahhZoyReWob3km/P/f4KMTfR+sloDt98jToo="
+
+ota:
+  - platform: esphome
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: ESP32-Sture2 Fallback Hotspot
+    password: "Sv3vO6A4cYkM"
+
+#Show WIFI SSID
+text_sensor:
+  - platform: wifi_info
+    ssid:
+      name: Connected WIFI
+      icon: "mdi:access-point"
+
+captive_portal:
+
+i2c:
+  - id: i2c_1
+    scl: 9
+    sda: 8
+
+sensor:
+  - platform: mpu6050
+    id: sensor_mpu6050_1
+    update_interval: 100ms  # Update interval
+    accel_x:
+      id: accel_x  
+    accel_y:
+      id: accel_y   
+    accel_z:
+      id: accel_z   
+        
+  # Calculate Pitch
+  - platform: template
+    name: Lutning Fram-Bak
+    id: pitch_angle
+    unit_of_measurement: "°"
+    accuracy_decimals: 1
+    icon: "mdi:angle-acute"
+    update_interval: 100ms
+    lambda: |-
+      float ax = id(accel_x).state;
+      float ay = id(accel_y).state;
+      float az = id(accel_z).state;
+      if (std::isnan(ax) || std::isnan(ay) || std::isnan(az)) return {};
+      return (atan2(-ax, sqrt(ay * ay + az * az)) * 180.0 / M_PI);
+    filters:
+      - offset: 0.0
+      - median:
+          window_size: 5            # Clean spikes
+          send_every: 1
+      - exponential_moving_average: # Smooth moving
+          alpha: 0.2
+          send_every: 2             # Send to Home Assistant interval of 200ms
+          send_first_at: 1
+
+  # Calculate Roll
+  - platform: template
+    name: "Lutning Vänster-Höger"
+    id: roll_angle
+    unit_of_measurement: "°"
+    accuracy_decimals: 1
+    icon: "mdi:angle-acute"
+    update_interval: 100ms
+    lambda: |-
+      float ay = id(accel_y).state;
+      float az = id(accel_z).state;
+      if (std::isnan(ay) || std::isnan(az)) return {};
+      return (atan2(ay, az) * 180.0 / M_PI);
+    filters:
+      - offset: 0.0
+      - median:
+          window_size: 5            # Clean spikes
+          send_every: 1
+      - exponential_moving_average: # Smooth moving
+          alpha: 0.2
+          send_every: 2             # Send to Home Assistant interval of 200ms
+          send_first_at: 1
